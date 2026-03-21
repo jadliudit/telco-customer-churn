@@ -1,7 +1,7 @@
 # 📉 Telco Customer Churn Prediction
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-blue)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17.9-blue)
 ![Power BI](https://img.shields.io/badge/PowerBI-Dashboard-yellow)
 ![Scikit-learn](https://img.shields.io/badge/Scikit--learn-ML-orange)
 ![XGBoost](https://img.shields.io/badge/XGBoost-Boosting-red)
@@ -51,11 +51,11 @@ This project was built as part of a personal portfolio to demonstrate practical 
 | Tool | Purpose |
 |---|---|
 | Python (pandas, numpy) | Data loading, cleaning, and manipulation |
+| psycopg2 / SQLAlchemy | Python-to-PostgreSQL ETL pipeline |
+| PostgreSQL 17.9 | Relational schema design and SQL analysis |
 | scikit-learn | Logistic Regression, Random Forest, model evaluation |
 | XGBoost | Gradient boosting model |
 | SHAP | Model explainability and feature importance |
-| PostgreSQL | Relational schema design and SQL analysis |
-| SQLAlchemy / psycopg2 | Python-to-PostgreSQL ETL pipeline |
 | Power BI | Interactive three-page dashboard |
 | GitHub | Version control and project hosting |
 | VS Code | Development environment |
@@ -76,7 +76,7 @@ telco-customer-churn/
 │
 ├── notebooks/
 │   ├── 01_data_loading.ipynb         # Data loading, inspection & validation ✅
-│   ├── 02_sql_analysis.ipynb         # PostgreSQL schema + analytical queries 🔄
+│   ├── 02_sql_analysis.ipynb         # PostgreSQL schema + 10 analytical queries ✅
 │   ├── 03_eda.ipynb                  # Exploratory data analysis 🔄
 │   ├── 04_feature_engineering.ipynb  # Encoding, scaling, SMOTE 🔄
 │   └── 05_modelling.ipynb            # LR, RF, XGBoost + SHAP 🔄
@@ -99,19 +99,14 @@ telco-customer-churn/
 Loaded all three CSV files into pandas DataFrames and performed a thorough inspection of the dataset before any cleaning or modelling.
 
 **Key steps:**
-- Loaded 7,043 rows × 38 columns from the main churn table using `encoding='latin-1'`
+- Loaded 7,043 rows × 38 columns using `encoding='latin-1'`
 - Defined reusable file paths using `os.path.join()` for cross-platform compatibility
 - Inspected all 38 column names and confirmed data types assigned by pandas
-- Previewed the first 3 rows transposed for readability across 38 columns
-- Identified 15 columns with missing values — all confirmed as **structural nulls**, not data errors:
-  - `Churn Category` & `Churn Reason` (73.5%) — only populated for churned customers
-  - Internet-related columns (21.7%) — customers with no internet service
-  - `Offer` (55.0%) — no marketing offer accepted
-  - Long distance columns (9.7%) — customers with no phone service
+- Identified 15 columns with missing values — all confirmed as structural nulls, not errors
 - Created a binary `Churn` column: `1` = Churned, `0` = Stayed or Joined
-- Validated zip code join: **100% of 1,626 customer zip codes matched** the population table
+- Validated zip code join: 100% of 1,626 customer zip codes matched the population table
 
-**Key findings from Notebook 1:**
+**Key findings:**
 
 | Check | Result |
 |---|---|
@@ -125,13 +120,46 @@ Loaded all three CSV files into pandas DataFrames and performed a thorough inspe
 
 ---
 
-## 📊 Key Findings So Far
+### Notebook 2 — SQL Analysis ✅
 
-1. **26.5% churn rate** — roughly 1 in 4 customers left the company in Q2 2022
-2. **Competitor is the #1 churn driver** — 45% of churned customers left for a better offer elsewhere
-3. **Month-to-Month contracts are the highest risk group** — 51.3% of all customers are on this contract type with no lock-in
-4. **Fiber Optic is the most popular internet type** — 43.1% of customers, typically higher monthly charges
-5. **All missing values are structurally expected** — no data quality issues found in the raw dataset
+Designed a relational PostgreSQL schema, loaded both tables via Python using SQLAlchemy, and wrote 10 analytical queries to uncover churn patterns across key business dimensions.
+
+**Key steps:**
+- Connected Python to PostgreSQL using SQLAlchemy connection string
+- Cleaned all column names to snake_case for SQL compatibility
+- Loaded `customer_churn` (7,043 rows) and `zipcode_population` (1,671 rows) into PostgreSQL
+- Wrote 10 business-focused SQL queries using CTEs, window functions, CASE WHEN, COALESCE, HAVING, and JOIN
+
+**SQL concepts used:**
+`COUNT`, `SUM`, `ROUND`, `GROUP BY`, `ORDER BY`, `WHERE`, `HAVING`, `CASE WHEN`, `COALESCE`, `OVER()` window functions, `JOIN`, `LIMIT`, `::numeric` casting, `IS NOT NULL`
+
+**Key findings from 10 queries:**
+
+| Query | Business Question | Key Finding |
+|---|---|---|
+| 1 | Overall churn rate | 26.5% baseline — 1 in 4 customers churned |
+| 2 | Churn by contract type | Month-to-Month 45.8% vs Two Year 2.5% — 18x difference |
+| 3 | Churn by internet type | Fiber Optic highest at 40.7% despite being premium service |
+| 4 | Churn by tenure | First 12 months critical — 47.4% churn rate |
+| 5 | Churn by payment method | Credit Card lowest at 14.5% vs Mailed Check at 36.9% |
+| 6 | Top churn reasons | Competitor advantages drive 44%+ of specific churn reasons |
+| 7 | Churn by offer type | Offer A best (6.7%), Offer E worst (52.9%) |
+| 8 | Revenue lost by city | San Diego $385k revenue lost — highest of any city |
+| 9 | Churn by population size | Larger areas churn slightly more (30.7% vs 24.5%) |
+| 10 | High value customers | Every top 10 high-value churned customer was on Fiber Optic |
+
+---
+
+## 📊 Key Business Insights So Far
+
+1. **26.5% overall churn rate** — roughly 1 in 4 customers left in Q2 2022
+2. **Contract type is the strongest churn signal** — Month-to-Month customers churn at 18x the rate of Two Year customers
+3. **First 12 months is the critical retention window** — 47.4% of new customers churn within the first year
+4. **Fiber Optic is a premium service with a retention problem** — 40.7% churn rate and all top high-value churned customers were on Fiber Optic
+5. **Competitor advantages drive 44%+ of churn** — better devices, better offers, faster speeds
+6. **Offer A is the most effective retention tool** — 6.7% churn vs 52.9% for Offer E
+7. **San Diego is the highest revenue loss city** — $385,446 in lost revenue from 185 churned customers
+8. **Credit Card payment correlates with loyalty** — 14.5% churn vs 36.9% for Mailed Check customers
 
 ---
 
@@ -145,14 +173,19 @@ cd telco-customer-churn
 
 **2. Install required libraries:**
 ```bash
-pip install pandas numpy matplotlib seaborn scikit-learn xgboost shap sqlalchemy psycopg2 jupyter ipykernel
+pip install pandas numpy matplotlib seaborn scikit-learn xgboost shap sqlalchemy psycopg2-binary jupyter ipykernel
 ```
 
 **3. Download the dataset:**
 
 Go to [Maven Analytics Data Playground](https://mavenanalytics.io/data-playground/telecom-customer-churn) and download the three CSV files. Place them in `data/raw/`.
 
-**4. Open and run the notebooks in order:**
+**4. Set up PostgreSQL:**
+- Install PostgreSQL 17.9 from [postgresql.org](https://www.postgresql.org/download/)
+- Create a database called `telecom_churn`
+- Update the connection string in `02_sql_analysis.ipynb` with your credentials
+
+**5. Run the notebooks in order:**
 ```bash
 jupyter notebook notebooks/01_data_loading.ipynb
 ```
@@ -164,8 +197,8 @@ jupyter notebook notebooks/01_data_loading.ipynb
 | Phase | Notebook | Status |
 |---|---|---|
 | Data Loading & Inspection | `01_data_loading.ipynb` | ✅ Complete |
-| SQL Analysis | `02_sql_analysis.ipynb` | 🔄 In Progress |
-| Exploratory Data Analysis | `03_eda.ipynb` | ⏳ Upcoming |
+| SQL Analysis | `02_sql_analysis.ipynb` | ✅ Complete |
+| Exploratory Data Analysis | `03_eda.ipynb` | 🔄 In Progress |
 | Feature Engineering | `04_feature_engineering.ipynb` | ⏳ Upcoming |
 | ML Modelling & SHAP | `05_modelling.ipynb` | ⏳ Upcoming |
 | Power BI Dashboard | `telco_churn_dashboard.pbix` | ⏳ Upcoming |
