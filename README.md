@@ -50,7 +50,7 @@ This project was built as part of a personal portfolio to demonstrate practical 
 
 | Tool | Purpose |
 |---|---|
-| Python (pandas, numpy) | Data loading, cleaning, and manipulation |
+| Python (pandas, numpy, matplotlib, seaborn) | Data loading, cleaning, manipulation and visualisation |
 | psycopg2 / SQLAlchemy | Python-to-PostgreSQL ETL pipeline |
 | PostgreSQL 17.9 | Relational schema design and SQL analysis |
 | scikit-learn | Logistic Regression, Random Forest, model evaluation |
@@ -77,7 +77,7 @@ telco-customer-churn/
 ├── notebooks/
 │   ├── 01_data_loading.ipynb         # Data loading, inspection & validation ✅
 │   ├── 02_sql_analysis.ipynb         # PostgreSQL schema + 10 analytical queries ✅
-│   ├── 03_eda.ipynb                  # Exploratory data analysis 🔄
+│   ├── 03_eda.ipynb                  # Exploratory data analysis ✅
 │   ├── 04_feature_engineering.ipynb  # Encoding, scaling, SMOTE 🔄
 │   └── 05_modelling.ipynb            # LR, RF, XGBoost + SHAP 🔄
 │
@@ -150,16 +150,55 @@ Designed a relational PostgreSQL schema, loaded both tables via Python using SQL
 
 ---
 
+### Notebook 3 — Exploratory Data Analysis ✅
+
+Performed deep visual exploration of the dataset using 6 different chart types across 5 analysis areas to uncover churn patterns before modelling.
+
+**Chart types used:** Bar chart, horizontal bar chart, histogram, box plot, violin plot, heatmap, line chart with area fill
+
+**Visualisations:**
+
+#### Churn Distribution
+![Churn Distribution](reports/figures/03_churn_distribution.png)
+
+#### Churn Rate by Key Categories
+![Churn by Category](reports/figures/03_churn_by_category.png)
+
+#### Tenure Analysis
+![Tenure Analysis](reports/figures/03_tenure_analysis.png)
+
+#### Monthly Charge Analysis
+![Monthly Charge](reports/figures/03_monthly_charge.png)
+
+#### Correlation Heatmap
+![Correlation Heatmap](reports/figures/03_correlation_heatmap.png)
+
+#### Churn Rate by Age Group
+![Churn by Age](reports/figures/03_churn_by_age.png)
+
+**Key findings from EDA:**
+
+| Analysis | Key Finding |
+|---|---|
+| Churn distribution | Competitor (841) is the dominant churn reason — nearly 3x the next category |
+| Churn by category | Month-to-Month 45.8% churn vs Two Year 2.5% — contract type is the strongest signal |
+| Tenure analysis | Churned customers have median tenure of 10 months vs 38 months for loyal customers |
+| Monthly charge | Churned customers concentrated at high charges ($80-95) — bimodal distribution for loyal customers |
+| Correlation | Tenure (-0.35) and Number of Referrals (-0.29) are strongest negative correlators with churn |
+| Age analysis | Churn rises sharply after 50 — customers aged 71-80 churn at 41.4% vs 22.4% for 19-30 |
+
+---
+
 ## 📊 Key Business Insights So Far
 
 1. **26.5% overall churn rate** — roughly 1 in 4 customers left in Q2 2022
 2. **Contract type is the strongest churn signal** — Month-to-Month customers churn at 18x the rate of Two Year customers
-3. **First 12 months is the critical retention window** — 47.4% of new customers churn within the first year
+3. **First 12 months is the critical retention window** — 47.4% of new customers churn within the first year, median tenure of churned customers is just 10 months
 4. **Fiber Optic is a premium service with a retention problem** — 40.7% churn rate and all top high-value churned customers were on Fiber Optic
 5. **Competitor advantages drive 44%+ of churn** — better devices, better offers, faster speeds
 6. **Offer A is the most effective retention tool** — 6.7% churn vs 52.9% for Offer E
 7. **San Diego is the highest revenue loss city** — $385,446 in lost revenue from 185 churned customers
-8. **Credit Card payment correlates with loyalty** — 14.5% churn vs 36.9% for Mailed Check customers
+8. **Older customers are significantly higher risk** — churn rate of 41.4% for customers aged 71-80
 
 ---
 
@@ -198,8 +237,8 @@ jupyter notebook notebooks/01_data_loading.ipynb
 |---|---|---|
 | Data Loading & Inspection | `01_data_loading.ipynb` | ✅ Complete |
 | SQL Analysis | `02_sql_analysis.ipynb` | ✅ Complete |
-| Exploratory Data Analysis | `03_eda.ipynb` | 🔄 In Progress |
-| Feature Engineering | `04_feature_engineering.ipynb` | ⏳ Upcoming |
+| Exploratory Data Analysis | `03_eda.ipynb` | ✅ Complete |
+| Feature Engineering | `04_feature_engineering.ipynb` | 🔄 In Progress |
 | ML Modelling & SHAP | `05_modelling.ipynb` | ⏳ Upcoming |
 | Power BI Dashboard | `telco_churn_dashboard.pbix` | ⏳ Upcoming |
 
